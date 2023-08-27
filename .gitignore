@@ -6,6 +6,9 @@ __pycache__/
 # MLflow runs
 notebooks/mlruns/
 
+# Catboost saves
+notebooks/catboost_info/
+
 # C extensions
 *.so
 
