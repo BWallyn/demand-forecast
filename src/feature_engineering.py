@@ -85,31 +85,6 @@ def get_split_train_val_cv(
     return list_train_valid
 
 
-# def add_holidays_period(df: pd.DataFrame, feat_date: str) -> pd.DataFrame:
-#     """Add the holidays periods to the dataset
-
-#     Args:
-#         df: dataset
-#         feat_date: name of the date feature
-#     Returns:
-#         df: dataset with the holidays indicator
-#     """
-#     # Load holiday dataset
-#     df_holidays = pd.read_pickle("../data/processed/holidays_france.pkl")
-#     # Create interval index
-#     # df_holidays.index = pd.IntervalIndex.from_arrays(df_holidays['Date de début'], df_holidays['Date de fin'], closed='both')
-#     # df['holidays_name'] = df['Date'].apply(lambda x : df_holidays.iloc[df_holidays.index.get_loc(x)]['Description'])
-#     # Merge based on the condition A is between begin and end
-#     merged_df = pd.merge_asof(df, df_holidays, left_on='Date', right_on='date_begin', direction='backward')
-
-#     # Filter out rows where A is after the 'end' date
-#     merged_df = merged_df[merged_df['Date'] <= merged_df['date_end']]
-
-#     # Keep all rows
-#     final_df = df.merge(merged_df, how='left', left_index=True, right_index=True)
-#     return final_df
-
-
 def add_holidays_period(df: pd.DataFrame, feat_date: str, zone: str="Zone A") -> pd.DataFrame:
     """Add the holidays periods to the dataset
 
