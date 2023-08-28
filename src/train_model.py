@@ -94,6 +94,20 @@ def mlflow_log_metrics(deliv_train: np.array, deliv_eval: np.array, sales_train:
     mlflow.log_metric('rmse_eval', mean_squared_error(sales_eval, deliv_eval, squared=True))
 
 
+def compute_shap(model: CatBoostRegressor, df: pd.DataFrame) -> np.array:
+    """Compute shap values of the model
+
+    Args:
+        model: model trained
+        df: dataset
+    Returns:
+        shape_values: shap values computed on the model
+    """
+    explainer = shap.Explainer(model)
+    shap_values = explainer(df)
+    return shap_values
+
+
 def mlflow_log_shap(model: CatBoostRegressor, df_train: pd.DataFrame, shap_max_disp: int, path_reports: str) -> None:
     """Log the shap values in an aritfact to MLflow
 
@@ -105,8 +119,7 @@ def mlflow_log_shap(model: CatBoostRegressor, df_train: pd.DataFrame, shap_max_d
     """
     path_fig = os.path.join(path_reports, 'shap_beeswarm.png')
     # shap.initjs()
-    explainer = shap.Explainer(model)
-    shap_values = explainer(df_train)
+    shap_values = compute_shape(model, df_train)
     shap.plots.beeswarm(shap_values, max_display=shap_max_disp, show=False)
     plt.savefig(path_fig)
     plt.show()
