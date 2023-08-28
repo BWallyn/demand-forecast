@@ -85,6 +85,38 @@ def get_split_train_val_cv(
     return list_train_valid
 
 
+def get_split_cv_by_week(
+    df: pd.DataFrame, df_date: pd.Series, feat_date: str, target: pd.Series, n_splits: int
+) -> list[tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]]:
+    """Split the time serie dataset for cross validation using expanding window.
+    One window correspond to one week.
+
+    Args:
+        df: dataset
+        target: target of the dataset
+        n_splits: number of splits to create
+    """
+    # Prepare
+    list_train_valid = []
+    # Get the end date
+    df[feat_date] = df_date
+    df.sort_values(by=feat_date, inplace=True)
+    max_date = df[feat_date].max()
+    print(max_date)
+    # Create a data range, split by week
+    date_range = pd.date_range(end=max_date, freq="W", periods=n_splits+1)
+    for i in range(1, len(date_range)):
+        train = df[df[feat_date] <= date_range[i-1]].drop(columns=[feat_date])
+        if i == len(date_range) - 1:
+            valid = df[(df[feat_date] > date_range[i-1]) & (df[feat_date] <= date_range[i])].drop(columns=[feat_date])
+        else:
+            valid = df[(df[feat_date] > date_range[i-1]) & (df[feat_date] <= date_range[i])].drop(columns=[feat_date])
+        target_train = target.loc[train.index]
+        target_valid = target.loc[valid.index]
+        list_train_valid.append((train, valid, target_train, target_valid))
+    return list_train_valid
+
+
 def add_holidays_period(df: pd.DataFrame, feat_date: str, zone: str="Zone A") -> pd.DataFrame:
     """Add the holidays periods to the dataset
 
