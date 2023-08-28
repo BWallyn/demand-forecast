@@ -100,9 +100,8 @@ def get_split_cv_by_week(
     list_train_valid = []
     # Get the end date
     df[feat_date] = df_date
-    df.sort_values(by=feat_date, inplace=True)
+    df = df.sort_values(by=feat_date)
     max_date = df[feat_date].max()
-    print(max_date)
     # Create a data range, split by week
     date_range = pd.date_range(end=max_date, freq="W", periods=n_splits+1)
     for i in range(1, len(date_range)):
