@@ -3,10 +3,10 @@
 # ==== IMPORTS ====
 # =================
 
-import json
 import os
 import numpy as np
 import pandas as pd
+import pickle
 
 from typing import List, Optional
 
@@ -195,7 +195,14 @@ def mlflow_log_metrics_cv(
 
 
 def create_pool(df: pd.DataFrame, y: pd.Series, feat_cat: str) -> Pool:
-    """
+    """Create a Pool for a Catboost model
+
+    Args:
+        df: dataset
+        y: target of the dataset
+        feat_cat: names of the categorical features
+    Returns:
+        pool_: Pool for catboost model
     """
     pool_ = Pool(df, label=y.values, cat_features=feat_cat)
     return pool_
@@ -205,7 +212,16 @@ def train_model(
     pool_train: Pool, pool_eval: Pool, plot_training: bool, verbose: int,
     **kwargs,
 ) -> CatBoostRegressor:
-    """
+    """Train a catboost model
+
+    Args:
+        pool_train: train pool
+        pool_eval: pool used to evaluate the model
+        plot_training: whether to plot the leaning curves
+        verbose: verbose parameter while learning
+        **kwargs: hyperparameters of the Catboost regressor
+    Returns:
+        model: Catboost regressor model trained
     """
     # Create model
     model = CatBoostRegressor(
@@ -221,6 +237,24 @@ def train_model(
         verbose=verbose,
     )
     return model
+
+
+def save_model(model: CatBoostRegressor, features: list[str], feat_cat: list[str], path: str) -> None:
+    """Save Catboost regressor model to pickle file
+
+    Args:
+        model: Catboost regressor model trained
+        features: list of the features of the model
+        feat_cat: list of the categorical features of the model
+        path: path to save model
+    """
+    to_save = {
+        "model": model,
+        "features": features,
+        "features_cat": feat_cat,
+    }
+    with open(path, 'wb') as fp:
+        pickle.dump(to_save, fp)
 
 
 def train_model_cv_mlflow(
