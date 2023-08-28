@@ -103,6 +103,8 @@ def add_holidays_period(df: pd.DataFrame, feat_date: str, zone: str="Zone A") ->
     merged_df = pd.merge_asof(
         df, df_holidays_zone[["date_begin", "date_end", "Description"]], left_on=feat_date, right_on='date_begin', direction='backward'
     )
+    # Set the right index as they are lost during merge asof
+    merged_df.index = df.index
     # Filter out rows where the Date is before the begining or after the 'end' date
     merged_df = merged_df[(merged_df[feat_date] >= merged_df['date_begin']) & (merged_df[feat_date] <= merged_df['date_end'])]
     merged_df.drop(columns=["date_begin", "date_end"], inplace=True)
