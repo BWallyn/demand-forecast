@@ -303,8 +303,9 @@ def train_model_cv_mlflow(
             # Train model
             model = train_model(pool_train, pool_eval, plot_training, verbose, **kwargs)
             # Predict
-            pred_train = model.predict(pool_train)
-            pred_eval = model.predict(pool_eval)
+            # Force predictions as integers as the number of newspapers has to be int
+            pred_train = np.round(model.predict(pool_train), 0)
+            pred_eval = np.round(model.predict(pool_eval), 0)
             l_unsold_rate_train.append(unsold_rate(pred_train, y_train_.values))
             l_unsold_rate_eval.append(unsold_rate(pred_eval, y_eval_.values))
             l_soldout_rate_train.append(sold_out_rate(pred_train, y_train_.values))
