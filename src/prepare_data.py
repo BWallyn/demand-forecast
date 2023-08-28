@@ -25,6 +25,7 @@ def set_type(df: pd.DataFrame, feat_date: str) -> pd.DataFrame:
     """
     # Convert date
     df[feat_date] = pd.to_datetime(df[feat_date], format="%Y-%m-%d")
+    df["id"] = df["id"].astype(str)
     return df
 
 
