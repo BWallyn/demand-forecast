@@ -119,7 +119,7 @@ def mlflow_log_shap(model: CatBoostRegressor, df_train: pd.DataFrame, shap_max_d
     """
     path_fig = os.path.join(path_reports, 'shap_beeswarm.png')
     # shap.initjs()
-    shap_values = compute_shape(model, df_train)
+    shap_values = compute_shap(model, df_train)
     shap.plots.beeswarm(shap_values, max_display=shap_max_disp, show=False)
     plt.savefig(path_fig)
     plt.show()
