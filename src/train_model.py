@@ -194,6 +194,35 @@ def mlflow_log_metrics_cv(
     mlflow.log_metric('best_iteration', best_iteration)
 
 
+def create_pool(df: pd.DataFrame, y: pd.Series, feat_cat: str) -> Pool:
+    """
+    """
+    pool_ = Pool(df, label=y.values, cat_features=feat_cat)
+    return pool_
+
+
+def train_model(
+    pool_train: Pool, pool_eval: Pool, plot_training: bool, verbose: int,
+    **kwargs,
+) -> CatBoostRegressor:
+    """
+    """
+    # Create model
+    model = CatBoostRegressor(
+        random_seed=12,
+        **kwargs
+    )
+    # Fit model
+    model.fit(
+        pool_train,
+        eval_set=pool_eval,
+        use_best_model=True,
+        plot=plot_training,
+        verbose=verbose,
+    )
+    return model
+
+
 def train_model_cv_mlflow(
     list_train_valid: list[tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]],
     feat_cat: List[str], plot_training: Optional[bool]=False, verbose: Optional[int]=0,
@@ -235,21 +264,10 @@ def train_model_cv_mlflow(
         for i in range(len(list_train_valid)):
             df_train_, df_eval_, y_train_, y_eval_ = list_train_valid[i]
             # Create Pools for catboost model
-            pool_train = Pool(df_train_, label=y_train_.values, cat_features=feat_cat)
-            pool_eval = Pool(df_eval_, label=y_eval_.values, cat_features=feat_cat)
-            # Create model
-            model = CatBoostRegressor(
-                random_seed=12,
-                **kwargs
-            )
-            # Fit model
-            model.fit(
-                pool_train,
-                eval_set=pool_eval,
-                use_best_model=True,
-                plot=plot_training,
-                verbose=verbose,
-            )
+            pool_train = create_pool(df_train_, y_train_, feat_cat)
+            pool_eval = create_pool(df_eval_, y_eval_, feat_cat)
+            # Train model
+            model = train_model(pool_train, pool_eval, plot_training, verbose, **kwargs)
             # Predict
             pred_train = model.predict(pool_train)
             pred_eval = model.predict(pool_eval)
