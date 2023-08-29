@@ -29,17 +29,24 @@ def set_type(df: pd.DataFrame, feat_date: str) -> pd.DataFrame:
     return df
 
 
-def check_split(df_train: pd.DataFrame, df_test: pd.DataFrame) -> None:
+def check_split(df_train: pd.DataFrame, df_test: pd.DataFrame, feat_date: str) -> None:
+    """Check the split between train and test has no problem
+
+    Args:
+        df_train: train dataset
+        df_test: test dataset
+        feat_date: name of the date feature
     """
-    """
-    print("Train:", df_train.origin.unique())
-    print("Test:", df_test.origin.unique())
-    print("Train:", df_train.observation_time.min(), df_train.observation_time.max())
-    print("Test:", df_test.observation_time.min(), df_test.observation_time.max())
+    print("Train:", df_train[feat_date].min(), df_train[feat_date].max())
+    print("Test:", df_test[feat_date].min(), df_test[feat_date].max())
+    # Check no row is in both datasets
+    ind_both = list(set(df_train.index) & set(df_test.index))
+    print("Ind in both train and test:", ind_both)
 
 
 def split_train_test(df: pd.DataFrame, feat_date: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
-    """Split the dataset into train and test sets and save the target in another file
+    """Split the dataset into train and test sets and separate target
+    One week is chosen as the test set.
 
     Args:
         df: dataset
@@ -50,14 +57,11 @@ def split_train_test(df: pd.DataFrame, feat_date: str) -> Tuple[pd.DataFrame, pd
         y_train: target of the train dataset
         y_test: target of the test dataset
     """
-    min_date = df[feat_date].min()
     max_date = df[feat_date].max()
-    # Split into train and test
-    train_percent = .75
-    time_between = max_date - min_date
-    train_cutoff = min_date + train_percent * time_between
-    df_train = df[df["Date"] <= train_cutoff]
-    df_test = df[df["Date"] > train_cutoff]
+    train_cutoff = max_date - datetime.timedelta(days=7)
+    # Split
+    df_train = df[df["Date"] < train_cutoff]
+    df_test = df[df["Date"] >= train_cutoff]
     # Extract target
     y_train = df_train["Ventes"]
     y_test = df_test["Ventes"]
