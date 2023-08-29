@@ -68,6 +68,45 @@ def add_lockdown_periods(df: pd.DataFrame, feat_date: str) -> pd.DataFrame:
     return df
 
 
+def add_holidays_period(df: pd.DataFrame, feat_date: str, zone: str="Zone A") -> pd.DataFrame:
+    """Add the holidays periods to the dataset
+
+    Args:
+        df: dataset
+        feat_date: name of the date feature
+    Returns:
+        df: dataset with the holidays indicator
+    """
+    # Options
+    zone_name = zone.replace(" ", "")
+    # Load holiday dataset
+    df_holidays = pd.read_pickle("../data/processed/holidays_france.pkl")
+    df_holidays_zone = df_holidays[df_holidays["Zones"] == zone]
+    # Merge closest holiday date
+    merged_df = pd.merge_asof(
+        df, df_holidays_zone[["date_begin", "date_end", "Description"]], left_on=feat_date, right_on='date_begin', direction='backward'
+    )
+    # Set the right index as they are lost during merge asof
+    merged_df.index = df.index
+    # Filter out rows where the Date is before the begining or after the 'end' date
+    merged_df = merged_df[(merged_df[feat_date] >= merged_df['date_begin']) & (merged_df[feat_date] <= merged_df['date_end'])]
+    merged_df.drop(columns=["date_begin", "date_end"], inplace=True)
+    merged_df.rename(columns={"Description": f"Description_{zone_name}"}, inplace=True)
+    # Select rows without holidays
+    df_no_holidays = df.drop(index=merged_df.index)
+    df_no_holidays.loc[:, f"Description_{zone_name}"] = "None"
+    df_final = pd.concat([df_no_holidays, merged_df]).sort_values(by=feat_date)
+    return df_final
+
+
+def add_lags_sma(df: pd.DataFrame, list_lags: list[int], feat_id: str) -> pd.DataFrame:
+    """
+    """
+    for lag in list_lags:
+        df.loc[:, f'sma_{lag}_ventes_lag7'] = df.groupby([feat_id]).rolling(lag)["Ventes"].mean().shift(7).values
+    return df
+
+
 def get_split_train_val_cv(
     df: pd.DataFrame, target: pd.Series, n_splits: int
 ) -> list[tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]]:
@@ -114,34 +153,3 @@ def get_split_cv_by_week(
         target_valid = target.loc[valid.index]
         list_train_valid.append((train, valid, target_train, target_valid))
     return list_train_valid
-
-
-def add_holidays_period(df: pd.DataFrame, feat_date: str, zone: str="Zone A") -> pd.DataFrame:
-    """Add the holidays periods to the dataset
-
-    Args:
-        df: dataset
-        feat_date: name of the date feature
-    Returns:
-        df: dataset with the holidays indicator
-    """
-    # Options
-    zone_name = zone.replace(" ", "")
-    # Load holiday dataset
-    df_holidays = pd.read_pickle("../data/processed/holidays_france.pkl")
-    df_holidays_zone = df_holidays[df_holidays["Zones"] == zone]
-    # Merge closest holiday date
-    merged_df = pd.merge_asof(
-        df, df_holidays_zone[["date_begin", "date_end", "Description"]], left_on=feat_date, right_on='date_begin', direction='backward'
-    )
-    # Set the right index as they are lost during merge asof
-    merged_df.index = df.index
-    # Filter out rows where the Date is before the begining or after the 'end' date
-    merged_df = merged_df[(merged_df[feat_date] >= merged_df['date_begin']) & (merged_df[feat_date] <= merged_df['date_end'])]
-    merged_df.drop(columns=["date_begin", "date_end"], inplace=True)
-    merged_df.rename(columns={"Description": f"Description_{zone_name}"}, inplace=True)
-    # Select rows without holidays
-    df_no_holidays = df.drop(index=merged_df.index)
-    df_no_holidays.loc[:, f"Description_{zone_name}"] = "None"
-    df_final = pd.concat([df_no_holidays, merged_df]).sort_values(by=feat_date)
-    return df_final
