@@ -46,7 +46,7 @@ def check_split(df_train: pd.DataFrame, df_test: pd.DataFrame, feat_date: str) -
 
 def split_train_test(df: pd.DataFrame, feat_date: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """Split the dataset into train and test sets and separate target
-    One week is chosen as the test set.
+    Two weeks are chosen as the test set.
 
     Args:
         df: dataset
@@ -58,7 +58,7 @@ def split_train_test(df: pd.DataFrame, feat_date: str) -> Tuple[pd.DataFrame, pd
         y_test: target of the test dataset
     """
     max_date = df[feat_date].max()
-    train_cutoff = max_date - datetime.timedelta(days=7)
+    train_cutoff = max_date - datetime.timedelta(days=14)
     # Split
     df_train = df[df["Date"] < train_cutoff]
     df_test = df[df["Date"] >= train_cutoff]
