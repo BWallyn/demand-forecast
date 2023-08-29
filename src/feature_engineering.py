@@ -99,11 +99,21 @@ def add_holidays_period(df: pd.DataFrame, feat_date: str, zone: str="Zone A") ->
     return df_final
 
 
-def add_lags_sma(df: pd.DataFrame, list_lags: list[int], feat_id: str) -> pd.DataFrame:
+def add_lags_sma(df: pd.DataFrame, list_lags: list[int], feat_id: str, feat_date: str) -> pd.DataFrame:
+    """Add different lags to the dataset with a shift of two weeks as it is the length of the test set.
+
+    Args:
+        df: dataset
+        list_lags: list of the lags to add
+        feat_id: name of the id feature
+        feat_date: name of the date feature
+    Returns:
+        df: dataset with lags added
     """
-    """
-    for lag in list_lags:
-        df.loc[:, f'sma_{lag}_ventes_lag7'] = df.groupby([feat_id]).rolling(lag)["Ventes"].mean().shift(7).values
+    df = df.sort_values(by=[feat_date])
+    for id in df[feat_id].unique():
+        for lag in list_lags:
+            df.loc[df[feat_id] == id, f'sma_{lag}_ventes_lag14'] = df.loc[df[feat_id] == id].rolling(lag)["Ventes"].mean().shift(14).values
     return df
 
 
@@ -142,7 +152,8 @@ def get_split_cv_by_week(
     df = df.sort_values(by=feat_date)
     max_date = df[feat_date].max()
     # Create a data range, split by week
-    date_range = pd.date_range(end=max_date, freq="W", periods=n_splits+1)
+    date_range = pd.date_range(end=max_date, freq="2W", periods=n_splits+1)
+    print("Dates for the split:", date_range)
     for i in range(1, len(date_range)):
         train = df[df[feat_date] <= date_range[i-1]].drop(columns=[feat_date])
         if i == len(date_range) - 1:
